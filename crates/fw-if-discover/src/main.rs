@@ -117,7 +117,14 @@ fn read_number<T: std::str::FromStr>(path: &Path) -> Option<T> {
 }
 
 fn sys_path(iface: &str) -> PathBuf {
-    Path::new("/sys/class/net").join(iface)
+    sysfs_net_root().join(iface)
+}
+
+fn sysfs_net_root() -> PathBuf {
+    std::env::var_os("FW_IF_DISCOVER_SYSFS_ROOT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("/sys"))
+        .join("class/net")
 }
 
 fn get_admin_state(iface: &str) -> String {
@@ -314,10 +321,10 @@ fn get_addresses() -> Result<HashMap<String, Vec<AddressInfo>>> {
 
 // Inventory assembly
 fn collect_interfaces() -> Result<Vec<NetworkInterface>> {
-    let root = Path::new("/sys/class/net");
+    let root = sysfs_net_root();
 
     let entries =
-        fs::read_dir(root).with_context(|| format!("Could not read {}", root.display()))?;
+        fs::read_dir(&root).with_context(|| format!("Could not read {}", root.display()))?;
 
     let mut names = entries
         .filter_map(|entry| entry.ok())

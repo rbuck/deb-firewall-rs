@@ -35,6 +35,10 @@ make release
 - `make precommit` checks formatting, runs Clippy with warnings denied, and
   runs workspace tests.
 
+The integration tests run the built command against temporary mock sysfs
+attributes and a mock `ip` executable. They do not need root access, Linux
+network interfaces, or Docker.
+
 ## Cross-build and package
 
 `make package` builds a release executable and creates a tar.gz archive under
@@ -201,5 +205,3 @@ tag.
   requires Linux to run.
 - Docker-based packages use the Docker image's default Rust target for the
   selected platform.
-- The workspace currently has no automated unit tests for discovery edge
-  cases.
