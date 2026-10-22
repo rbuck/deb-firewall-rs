@@ -1,7 +1,7 @@
 CARGO?=cargo
 TAR?=tar
 DOCKER?=docker
-PACKAGE=fw-if-discover
+PACKAGE=fw-if-discovery
 BINARY=fw-if-discover
 DOCKER_IMAGE=fw-rust-bookworm
 DOCKER_PLATFORM_FLAG=$(if $(DOCKER_PLATFORM),--platform $(DOCKER_PLATFORM),)

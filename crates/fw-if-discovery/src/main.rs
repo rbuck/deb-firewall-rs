@@ -449,7 +449,7 @@ fn parse_args() -> Result<Cli> {
             }
             "--help" | "-h" => {
                 println!(
-                    "Usage: gather-interface-facts [--prefix DIR] \
+                    "Usage: fw-if-discover [--prefix DIR] \
                      [--output FILE | OUTPUT_FILE]\n\
                      \n\
                      --prefix DIR  Redirect the default system output path \

@@ -1,4 +1,4 @@
-# fw-if-discover
+# fw-if-discovery
 
 A command-line application for discovering Linux network-interface facts and
 writing a versioned JSON inventory.

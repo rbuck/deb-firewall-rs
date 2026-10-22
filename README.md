@@ -6,13 +6,16 @@ services involved in that system.
 
 ## Crates
 
-- [`fw-if-discover`](crates/fw-if-discover/README.md) discovers Linux network
-  interfaces and writes a versioned JSON facts document.
+- [`fw-if-discovery`](crates/fw-if-discovery/README.md) discovers Linux network
+  interfaces and writes a versioned JSON facts document; its executable is
+  `fw-if-discover`.
+- [`fw-if-resolver`](crates/fw-if-resolver/README.md) combines discovered
+  facts with network intent; its executable is `fw-if-resolve`.
 
 ## Workspace
 
 Workspace package properties and shared dependencies are defined in the root
-`Cargo.toml`. The current workspace includes the `fw-if-discover` crate.
+`Cargo.toml`.
 
 ## Build and test
 

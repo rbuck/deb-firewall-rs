@@ -19,9 +19,9 @@ jobs:
         shell: bash
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
-          package_version="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json, sys; print(next(package["version"] for package in json.load(sys.stdin)["packages"] if package["name"] == "fw-if-discover"))')"
+          package_version="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json, sys; print(next(package["version"] for package in json.load(sys.stdin)["packages"] if package["name"] == "fw-if-discovery"))')"
           if [[ "$tag_version" != "$package_version" ]]; then
-            echo "Tag v$tag_version does not match fw-if-discover version $package_version" >&2
+            echo "Tag v$tag_version does not match fw-if-discovery version $package_version" >&2
             exit 1
           fi
       - name: Run checks
