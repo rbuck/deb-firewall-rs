@@ -49,11 +49,14 @@ network interfaces, or Docker.
 
 ## Cross-build and package
 
-`make package` builds a release executable and creates a tar.gz archive under
-`dist/`. The archive is named
-`fw-if-discover-<version>-<rust-target>.tar.gz` and contains a
-`fw-if-discover/` directory with the executable, the crate README, and the MIT
-`LICENSE`.
+`make package` builds both release executables and creates separate tar.gz
+archives under `dist/`:
+
+- `fw-if-discover-<version>-<rust-target>.tar.gz`
+- `fw-if-resolve-<version>-<rust-target>.tar.gz`
+
+Each archive contains its executable, the corresponding crate README, and the
+MIT `LICENSE`.
 
 To build for another Rust target, install the target with `rustup` and pass it
 to Make:
@@ -99,9 +102,9 @@ not run it or execute the test suite inside the target container.
 
 Pushing a version tag such as `v0.1.0` triggers the GitHub Actions release
 workflow. It checks that the tag matches the workspace package version, runs
-the precommit checks, builds packages for 64-bit Linux x86_64 and ARM64 and
-macOS x86_64 and ARM64, generates `SHA256SUMS.txt`, and attaches the packages
-to a GitHub Release.
+the precommit checks, builds both crate packages for each configured Rust
+target, generates `SHA256SUMS.txt`, and attaches the packages to a GitHub
+Release.
 
 Tags should be treated as immutable. Fetch remote tags and push only the
 specific new release tag:
@@ -111,7 +114,7 @@ git fetch --tags origin
 git tag --list
 ```
 
-For example, to release version `0.2.0`:
+For example, to release version `0.3.0`:
 
 1. Select the next version according to Semantic Versioning, update `version`
    in the root `Cargo.toml`, update `Cargo.lock` as needed, then run
@@ -120,14 +123,41 @@ For example, to release version `0.2.0`:
 3. Create and push an annotated tag:
 
    ```sh
-   git tag -a v0.2.0 -m "Release v0.2.0"
-   git push origin v0.2.0
+   git tag -a v0.3.0 -m "Release v0.3.0"
+   git push origin v0.3.0
    ```
 
-4. Check the Actions run and confirm the four archives and checksum file are
-   attached to the release.
+4. Check the Actions run and confirm both crate archives for every configured
+   target, along with the checksum file, are attached to the release.
 
 Do not use `git push --tags` for a release, since it can publish other local
 tags unintentionally. If a release build fails or the tag version is wrong,
 fix the source and use a new version and tag rather than moving the existing
 tag.
+
+## Known issues
+
+### Scaling CLI build and packaging tasks
+
+The Makefile currently keeps a `CLI_TARGETS` registry mapping each Cargo
+package to its executable name. GNU Make templates generate that CLI's
+release-build and package targets, so adding a command requires one registry
+entry rather than a copied set of recipes. Keep the package and binary names
+in sync with the corresponding crate manifest.
+
+If the build setup grows, consider these alternatives:
+
+1. **Keep the Makefile registry and templates.** This is the current approach.
+   It is simple and keeps Make as the interface, but the registry duplicates
+   package/binary metadata from Cargo manifests.
+2. **Use Cargo metadata as the registry.** Store or infer the CLI executable
+   metadata in crate manifests and have a small helper read `cargo metadata`.
+   This avoids duplicate lists but adds metadata conventions and parsing logic.
+3. **Add a Rust `xtask` package.** Move release packaging and target selection
+   into a workspace tool, with Make targets as thin wrappers. This offers more
+   room for complex release workflows, but is more infrastructure than needed
+   for the current build-and-archive tasks.
+
+The current recommendation is to use the Makefile template until packaging
+needs become substantially more complex; then reassess a metadata-driven
+registry or `xtask`.

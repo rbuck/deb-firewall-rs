@@ -1,15 +1,16 @@
 CARGO?=cargo
 TAR?=tar
 DOCKER?=docker
-PACKAGE=fw-if-discovery
-BINARY=fw-if-discover
+CLI_TARGETS=fw-if-discovery=fw-if-discover fw-if-resolver=fw-if-resolve
 DOCKER_IMAGE=fw-rust-bookworm
 DOCKER_PLATFORM_FLAG=$(if $(DOCKER_PLATFORM),--platform $(DOCKER_PLATFORM),)
-VERSION=$(shell $(CARGO) metadata --no-deps --format-version 1 | sed -n 's/.*"name":"$(PACKAGE)","version":"\([^"]*\)".*/\1/p')
+cli_package=$(firstword $(subst =, ,$(1)))
+cli_binary=$(word 2,$(subst =, ,$(1)))
+CLI_PACKAGES=$(foreach cli,$(CLI_TARGETS),$(call cli_package,$(cli)))
+VERSION=$(shell $(CARGO) metadata --no-deps --format-version 1 | sed -n 's/.*"name":"$(call cli_package,$(firstword $(CLI_TARGETS)))","version":"\([^"]*\)".*/\1/p')
 RUST_TARGET?=$(shell rustc -vV | sed -n 's/^host: //p')
 TARGET_DIR=$(shell $(CARGO) metadata --no-deps --format-version 1 | sed -n 's/.*"target_directory":"\([^"]*\)".*/\1/p')
 RELEASE_DIR=$(TARGET_DIR)/$(RUST_TARGET)/release
-PACKAGE_NAME=$(BINARY)-$(VERSION)-$(RUST_TARGET)
 
 #:help: help          | Displays the Makefile help
 .PHONY: help
@@ -46,24 +47,33 @@ build:
 #:help: run           | Runs fw-if-discover; pass arguments with ARGS='...'
 .PHONY: run
 run:
-	$(CARGO) run --locked -p $(PACKAGE) -- $(ARGS)
+	$(CARGO) run --locked -p $(call cli_package,$(firstword $(CLI_TARGETS))) --bin $(call cli_binary,$(firstword $(CLI_TARGETS))) -- $(ARGS)
 
-#:help: release       | Builds the optimized executable for RUST_TARGET
+#:help: release       | Builds all optimized CLI executables for RUST_TARGET
 .PHONY: release
-release:
-	$(CARGO) build --release --locked --target $(RUST_TARGET) -p $(PACKAGE)
+release: $(addprefix release-,$(CLI_PACKAGES))
 
-#:help: package       | Bundles the release executable, crate README, and license in dist/*.tar.gz
+#:help: package       | Bundles all release executables, crate READMEs, and license in dist/*.tar.gz
 .PHONY: package
-package: release
+package: $(addprefix package-,$(CLI_PACKAGES))
+
+define CLI_RULES
+.PHONY: release-$(call cli_package,$(1)) package-$(call cli_package,$(1))
+release-$(call cli_package,$(1)):
+	$$(CARGO) build --release --locked --target $$(RUST_TARGET) -p $(call cli_package,$(1))
+
+package-$(call cli_package,$(1)): release-$(call cli_package,$(1))
 	mkdir -p dist
 	set -eu; \
-		stage=$$(mktemp -d); \
-		trap 'rm -rf "$$stage"' EXIT; \
-		mkdir -p "$$stage/$(BINARY)"; \
-		cp "$(RELEASE_DIR)/$(BINARY)" "$$stage/$(BINARY)/"; \
-		cp "crates/$(PACKAGE)/README.md" LICENSE "$$stage/$(BINARY)/"; \
-		$(TAR) -czf "dist/$(PACKAGE_NAME).tar.gz" -C "$$stage" "$(BINARY)"
+		stage=$$$$(mktemp -d); \
+		trap 'rm -rf "$$$$stage"' EXIT; \
+		mkdir -p "$$$$stage/$(call cli_binary,$(1))"; \
+		cp "$$(RELEASE_DIR)/$(call cli_binary,$(1))" "$$$$stage/$(call cli_binary,$(1))/"; \
+		cp "crates/$(call cli_package,$(1))/README.md" LICENSE "$$$$stage/$(call cli_binary,$(1))/"; \
+		$$(TAR) -czf "dist/$(call cli_binary,$(1))-$$(VERSION)-$$(RUST_TARGET).tar.gz" -C "$$$$stage" "$(call cli_binary,$(1))"
+endef
+
+$(foreach cli,$(CLI_TARGETS),$(eval $(call CLI_RULES,$(cli))))
 
 #:help: docker-package | Builds a Linux package in dist/ using Docker
 .PHONY: docker-package
