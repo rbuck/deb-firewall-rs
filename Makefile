@@ -53,7 +53,7 @@ run:
 release:
 	$(CARGO) build --release --locked --target $(RUST_TARGET) -p $(PACKAGE)
 
-#:help: package       | Bundles the release executable, README, and license in dist/*.tar.gz
+#:help: package       | Bundles the release executable, crate README, and license in dist/*.tar.gz
 .PHONY: package
 package: release
 	mkdir -p dist
@@ -62,7 +62,7 @@ package: release
 		trap 'rm -rf "$$stage"' EXIT; \
 		mkdir -p "$$stage/$(BINARY)"; \
 		cp "$(RELEASE_DIR)/$(BINARY)" "$$stage/$(BINARY)/"; \
-		cp README.md LICENSE "$$stage/$(BINARY)/"; \
+		cp "crates/$(PACKAGE)/README.md" LICENSE "$$stage/$(BINARY)/"; \
 		$(TAR) -czf "dist/$(PACKAGE_NAME).tar.gz" -C "$$stage" "$(BINARY)"
 
 #:help: docker-package | Builds a Linux package in dist/ using Docker
