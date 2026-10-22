@@ -17,6 +17,13 @@ services involved in that system.
 Workspace package properties and shared dependencies are defined in the root
 `Cargo.toml`.
 
+## Versioning
+
+This workspace follows [Semantic Versioning](https://semver.org/). Release
+versions use `MAJOR.MINOR.PATCH`: incompatible changes increment MAJOR,
+backward-compatible functionality increments MINOR, and backward-compatible
+bug fixes increment PATCH. Workspace crate versions are kept aligned.
+
 ## Build and test
 
 From this directory:
@@ -104,16 +111,17 @@ git fetch --tags origin
 git tag --list
 ```
 
-For example, to release version `0.1.1`:
+For example, to release version `0.2.0`:
 
-1. Update `version` in the root `Cargo.toml`, update `Cargo.lock` as needed,
-   then run `make precommit` and review the changes.
+1. Select the next version according to Semantic Versioning, update `version`
+   in the root `Cargo.toml`, update `Cargo.lock` as needed, then run
+   `make precommit` and review the changes.
 2. Commit and push the release changes.
 3. Create and push an annotated tag:
 
    ```sh
-   git tag -a v0.1.1 -m "Release v0.1.1"
-   git push origin v0.1.1
+   git tag -a v0.2.0 -m "Release v0.2.0"
+   git push origin v0.2.0
    ```
 
 4. Check the Actions run and confirm the four archives and checksum file are
